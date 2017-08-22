@@ -1,4 +1,5 @@
 'use sctrict'
+
 var fs = require('fs');
 var path = require('path');
 var bcrypt = require('bcrypt-nodejs');
@@ -20,46 +21,24 @@ function saveUser(req, res) {
   newUser.role = params.role;
   newUser.image = params.image;
 
-  console.log(newUser);
-
   if (params.password) {
     bcrypt.hash(params.password, null, null, function(err, hash) {
       newUser.password = hash;
-
       if (newUser.name && newUser.surname && newUser.email) {
         newUser.save((err, userStored) => {
           if (err) {
-            res.status(500).send({message: 'ERROR al guardar' + err});
-          }else{
-            if (!userStored) {
-              res.status(404).send({message: 'No se ha registrado el usuario'});
-            }else {
-              res.status(200).send({user: userStored});
-            }
+            res.status(500).send({message: 'ERROR al guardar - ' + err});
+          } else if (!userStored) {
+            res.status(404).send({message: 'No se ha registrado el usuario'});
+          } else {
+            res.status(200).send({user: userStored});
           }
         });
-      }else {
+      } else {
         res.status(200).send({message: 'Rellena todos los campos'});
       }
     })
   }
-}
-
-function updateUser(req, res) {
-  var userId = req.params.id;
-  var update = req.body;
-
-  User.findByIdAndUpdate(userId, update, (err, userUpdate) => {
-    if (err){
-      res.status(500).send({message: 'ERROR al actualizar el usuario' + err});
-    }else {
-      if (!userUpdate) {
-        res.status(404).send({message: 'No se ha actualizar el usuario'});
-      }else {
-        res.status(200).send({user: userUpdate});
-      }
-    }
-  })
 }
 
 function loginUser(req, res){
@@ -76,11 +55,6 @@ function loginUser(req, res){
         res.status(404).send({message: 'El usuario no existe'})
       }else {
         bcrypt.compare(password, user.password, function(err, check) {
-          console.log(check);
-          console.log(email);
-          console.log(user.email);
-          console.log(password);
-          console.log(user.password);
           if (check) {
             if (params.gethash) {
               res.status(200).send({
@@ -98,6 +72,23 @@ function loginUser(req, res){
     };
   });
 };
+
+function updateUser(req, res) {
+  var userId = req.params.id;
+  var update = req.body;
+
+  User.findByIdAndUpdate(userId, update, (err, userUpdate) => {
+    if (err){
+      res.status(500).send({message: 'ERROR al actualizar el usuario' + err});
+    } else if (!userUpdate) {
+      res.status(404).send({message: 'No se ha actualizado el usuario'});
+    } else {
+      res.status(200).send({user: userUpdate});
+    }
+  })
+}
+
+
 
 function uploadImage(req, res) {
   var userId = req.params.id;
